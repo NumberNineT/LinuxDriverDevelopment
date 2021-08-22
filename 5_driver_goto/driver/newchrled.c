@@ -125,6 +125,8 @@ static const struct file_operations newchrled_fops = {
 };
 
 //模块入口
+//为了增强代码的鲁棒性，使用goto语句处理异常的返回值，而不是直接返回
+//直接返回有很多安全隐患
 static int __init newchrled_init(void)
 {
     int ret = 0;
@@ -167,20 +169,39 @@ static int __init newchrled_init(void)
     //将cdev添加到linux驱动中
     //int cdev_add(struct cdev *, dev_t, unsigned);
     ret = cdev_add(&newchrled.c_dev, newchrled.devid, NEWCHRLED_COUNT);
-
+    if(ret < 0){
+        goto fail_cdev;     //
+    }
     //step4: 自动创建设备节点
     //cmm_class = class_create(THIS_MODULE, "cardman_4000");
     newchrled.class = class_create(THIS_MODULE, NEWCHRLED_NAME);
-    if (IS_ERR(newchrled.class))
-		return PTR_ERR(newchrled.class);
+    if (IS_ERR(newchrled.class)){
+        ret = PTR_ERR(newchrled.class);
+        goto fail_class;    //
+    }
 
     newchrled.device = device_create(newchrled.class, NULL,
                     newchrled.devid, NULL, NEWCHRLED_NAME);
     if( IS_ERR(newchrled.device) ){
-        return PTR_ERR(newchrled.device);
+        ret = PTR_ERR(newchrled.device);
+        goto fail_device;       //
     }
     
     return 0;
+
+
+/***这里是异常返回值处理部分**/
+fail_device:
+    class_destroy(newchrled.class);
+    //goto执行到这里以后，仍然会执行后面的fail_class, fail_cdev, fail_devid
+fail_class:
+    dev_del(&newchrled.c_dev);
+    //执行fail_cdev, fail_devid
+fail_cdev:
+    unregister_chrdev_region(newchrled.devid, 1);
+    //仍然会执行fail_devid
+fail_devid:
+    return ret;
 }
 
 //模块出口
