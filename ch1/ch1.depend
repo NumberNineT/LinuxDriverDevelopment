@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1674217893 source:/home/qz/code/LinuxDriverDevelopment/ch1/main.c
+	<stdio.h>
+	<stdlib.h>
+	"test.h"
+
+1674217827 /home/qz/code/LinuxDriverDevelopment/ch1/test.h
+
