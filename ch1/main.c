@@ -25,8 +25,14 @@ int main(int argc, char **argv)
     // input_output_test2();
 
     // 进程 process, process ID
-    printf("process ID:%ld\r\n", (long)getpid());
+    // printf("process ID:%ld\r\n", (long)getpid());
+    // process_test();
 
+    // get current user ID
+    // uid_gid_test();
+
+    // signal test
+    signal_test();
 
     return 0;
 }

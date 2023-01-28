@@ -7,6 +7,10 @@ void file_stat_test();
 int directory_op_test(int argc, char **argv);
 int input_output_test(void);
 int input_output_test2();
+void process_test(void);
+void err_test(int argc, char *argv[]);
+void uid_gid_test();
+void signal_test();
 
 
 

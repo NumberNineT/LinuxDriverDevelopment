@@ -4,6 +4,19 @@
         "stat.h": "c",
         "string.h": "c",
         "dirent.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "unistd.h": "c",
+        "types.h": "c",
+        "error.h": "c",
+        "signal.h": "c",
+        "limits.h": "c",
+        "errno.h": "c",
+        "param.h": "c",
+        "times.h": "c",
+        "fcntl.h": "c",
+        "stdio.h": "c",
+        "ioctl.h": "c",
+        "termios.h": "c",
+        "apue.h": "c"
     }
 }
