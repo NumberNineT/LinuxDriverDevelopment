@@ -17,6 +17,8 @@
         "stdio.h": "c",
         "ioctl.h": "c",
         "termios.h": "c",
-        "apue.h": "c"
+        "apue.h": "c",
+        "features.h": "c",
+        "wordsize.h": "c"
     }
 }

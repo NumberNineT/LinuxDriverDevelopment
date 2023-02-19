@@ -13,12 +13,15 @@
 #define UNUSED_PARAM(p)       ((void)p)
 
 #define err_quit(format, ...) { printf(format"\r\n", ##__VA_ARGS__); \
-                                exit(-1); \
+                                exit(-1);                            \
                                }
 #define err_sys(format, ...)  ( printf(format"\r\n", ##__VA_ARGS__))
 #define err_ret(format, ...)  { printf(format"\r\n", ##__VA_ARGS__); \
-                                return; \
+                                return;                              \
                                }
+#define err_dump(format, ...)  { printf(format"\r\n", ##__VA_ARGS__); \
+                                 exit(-1);                             \
+                                }
 
 #define BUFFERSIZE            4096
 #define MAXLINE               1
