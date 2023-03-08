@@ -19,6 +19,7 @@
         "termios.h": "c",
         "apue.h": "c",
         "features.h": "c",
-        "wordsize.h": "c"
+        "wordsize.h": "c",
+        "wchar.h": "c"
     }
 }
