@@ -20,6 +20,13 @@
         "apue.h": "c",
         "features.h": "c",
         "wordsize.h": "c",
-        "wchar.h": "c"
+        "wchar.h": "c",
+        "pwd.h": "c",
+        "shadow.h": "c",
+        "grp.h": "c",
+        "stdlib.h": "c",
+        "netdb.h": "c",
+        "utsname.h": "c",
+        "setjmp.h": "c"
     }
 }
