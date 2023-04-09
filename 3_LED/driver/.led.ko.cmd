@@ -1,1 +1,0 @@
-cmd_/home/qz/Desktop/LinuxCore/test_project/3_LED/driver/led.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/qz/Desktop/LinuxCore/test_project/3_LED/driver/led.ko /home/qz/Desktop/LinuxCore/test_project/3_LED/driver/led.o /home/qz/Desktop/LinuxCore/test_project/3_LED/driver/led.mod.o ;  true
