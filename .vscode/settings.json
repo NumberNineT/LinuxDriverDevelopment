@@ -27,6 +27,10 @@
         "stdlib.h": "c",
         "netdb.h": "c",
         "utsname.h": "c",
-        "setjmp.h": "c"
+        "setjmp.h": "c",
+        "resource.h": "c",
+        "wait.h": "c",
+        "sigset.h": "c",
+        "acct.h": "c"
     }
 }

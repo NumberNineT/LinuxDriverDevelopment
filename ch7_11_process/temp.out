@@ -1,0 +1,6 @@
+This is a process test.Hello, world start
+before fork:
+pid:4072, g_var:7, var:89
+Hello, world start
+before fork:
+pid:4070, g_var:6, var:88

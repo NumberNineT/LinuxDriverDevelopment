@@ -7,6 +7,8 @@
 #include <string.h>
 
 
+
+
 /*************
  * MACRO 
  *************/
@@ -53,5 +55,10 @@ static long openmax = 0;
  *************/
 static long posix_version = 0;
 static long xsi_version;
+
+/*****************
+ * DECLARATION
+ *****************/
+void pr_exit(int status);
 
 #endif
