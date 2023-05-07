@@ -15,7 +15,15 @@ void rise_condition_test();
 
 void exec_test1();
 void shell_test();
+void tsys_test(int argc, char *argv[]);
 void system_test(void);
 void uid_test(void);
+void process_counter_test(void);
+void get_process_info(int argc, char *argv[]);
+void get_user_info(void);
+void process_schedule_test(int argc, char *argv[]);
+void process_times_test(int argc, char *argv[]);
+void  process_times_test(int argc, char *argv[]);
+int test_main(void);
 
 #endif

@@ -22,8 +22,16 @@ int main(int argc, char *argv[])
 
     // exec_test1();
     // shell_test();
+    // tsys_test(argc, argv);
     // system_test();
-    uid_test();
+    // uid_test();
+    // process_counter_test();
+    // get_process_info(argc, argv);
+    // get_user_info();
+    // process_schedule_test(argc, argv);
+    // process_times_test(argc, argv);
+    // process_times_test(argc, argv);
+    test_main();
 
     if (errno != 0)
 	    printf("Hello, world end with error:%d\n\n", errno);
