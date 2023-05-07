@@ -25,5 +25,16 @@ void process_schedule_test(int argc, char *argv[]);
 void process_times_test(int argc, char *argv[]);
 void  process_times_test(int argc, char *argv[]);
 int test_main(void);
+void sig_test(void);
+void sig_test2(void);
+void sig_test3(void);
+void sig_test4(void);
+int sig_test5(void);
+unsigned int sleep1(unsigned int seconds);
+unsigned int sleep2(unsigned int seconds);
+void sig_alarm_test1(void);
+void sig_test6(void);
+void sig_test_m(void);
+void sig_test_m(void);
 
 #endif

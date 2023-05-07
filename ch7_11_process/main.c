@@ -31,7 +31,16 @@ int main(int argc, char *argv[])
     // process_schedule_test(argc, argv);
     // process_times_test(argc, argv);
     // process_times_test(argc, argv);
-    test_main();
+    // test_main();
+    // sig_test();
+    // sig_test2();
+    // sig_test3();
+    // sig_test4();
+    // sig_test5();
+    // sig_alarm_test1();
+    // sig_test6();
+    sig_test_m();
+
 
     if (errno != 0)
 	    printf("Hello, world end with error:%d\n\n", errno);
