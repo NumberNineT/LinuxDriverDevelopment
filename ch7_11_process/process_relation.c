@@ -34,8 +34,18 @@
 #include <stdio.h>
 
 // 进程, 父进程, 进程组, 会话(进程组集合), 作业控制(进程组集合)
+// SIGINT:CTRL^C:
+// SIGSEGV:硬件异常:/0, 无效内存引用等
+// SIGURG:网络上受到了带外数据
+// SIGALRM:alarm() 产生的闹钟信号
+// SIGPIPE:管道的的读进程已终止后,还有进程写该管道时产生
+// SIGCHLD:一个子进程已经终止
+// SIGKILL 和 SIGSTOP 不可以被用户捕获,提供给超级用户和和内核终止进程使用
+// 大多数信号的默认操作是终止进程
 
-int kill(pid_t pid, int signo);
+
+
+int kill(pid_t pid, int signo); // kill 默认传送 SIGTERM 信号
 int raise(int signo); // 给进程自己发送信号
 unsigned int alarm(unsigned int seconds); // 为进程注册一个闹钟
 int pause(void); // 阻塞等待一个信号
@@ -61,44 +71,45 @@ static void pr_ids(char *name)
     fflush(stdout);
 }
 
-int test_main(void)
-{
-    char c;
-    pid_t pid;
+// int test_main(void)
+// {
+//     char c;
+//     pid_t pid;
 
-    pr_ids("parent");
+//     pr_ids("parent");
 
-    if ((pid = fork()) < 0) {
-        err_sys("fork failed");
-        return -1;
-    } else if (pid > 0) { // parent
-        sleep(5); // sleep to let child stop itself
-    } else { // child
-        pr_ids("child");
-        signal(SIGHUP, sig_hup); // establish signal handler
-        kill(getpid(), SIGQUIT); // stop ourself
-        pr_ids("child"); // print onlyu if we're continued
-        if (read(STDIN_FILENO, &c, 1) != 1) {
-            err_sys("read err on controlling TTY, errno:%d", errno);
-        }
-    }
-    exit(0);
-}
+//     if ((pid = fork()) < 0) {
+//         err_sys("fork failed");
+//         return -1;
+//     } else if (pid > 0) { // parent
+//         sleep(5); // sleep to let child stop itself
+//     } else { // child
+//         pr_ids("child");
+//         signal(SIGHUP, sig_hup); // establish signal handler
+//         kill(getpid(), SIGQUIT); // stop ourself
+//         pr_ids("child"); // print onlyu if we're continued
+//         if (read(STDIN_FILENO, &c, 1) != 1) {
+//             err_sys("read err on controlling TTY, errno:%d", errno);
+//         }
+//     }
+//     exit(0);
+// }
 
 // we'd better use sigaction() rather thann signal() cause the difference signal() realization
-static void sig_usr(int signo);
-void sig_test(void)
+static void sig_usr_handler(int signo);
+void sig_usr_test(void)
 {
-    if (signal(SIGUSR1, sig_usr) == SIG_ERR) {
+    if (signal(SIGUSR1, sig_usr_handler) == SIG_ERR) {
         err_sys("can't catch SIGUSR1");
     }
-    if (signal(SIGUSR2, sig_usr) == SIG_ERR) {
+    if (signal(SIGUSR2, sig_usr_handler) == SIG_ERR) {
         err_sys("can't catch SIGUSR2");
     }
-    for (;;) pause();
+    for (;;) 
+        pause();
 }
 
-static void sig_usr(int signo)
+static void sig_usr_handler(int signo)
 {
     if (signo == SIGUSR1) {
         printf("%d SIGUSR1 received\n", getpid());
@@ -110,12 +121,18 @@ static void sig_usr(int signo)
     }
 }
 
-static void alarm_sig_handler(int signo);
-void sig_test2(void)
+static void sig_alrm_handler(int signo);
+void sig_alarm_test(void)
 {
     struct passwd *ptr;
-    if (signal(SIGALRM, alarm_sig_handler) == SIG_ERR) {
+    if (signal(SIGALRM, sig_alrm_handler) == SIG_ERR) {
         err_ret("Can't catch SIGALRM");
+    }
+    if (signal(SIGSEGV, sig_alrm_handler) == SIG_ERR) {
+        err_ret("Can't catch SIGSEGV");
+    }
+    if (signal(SIGFPE, sig_alrm_handler) == SIG_ERR) {
+        err_ret("Can't catch SIGFPE");
     }
     for (;;) {
         if((ptr = getpwnam("root")) == NULL) {
@@ -126,25 +143,36 @@ void sig_test2(void)
         } else {
             printf("correct\n");
         }
+        printf("raise a SIGFPE fault\n");
+        printf("%d\n", 1/0);
+        sleep(5);
     }
 }
-static void alarm_sig_handler(int signo)
+static void sig_alrm_handler(int signo)
 {
-    struct passwd *rootptr;
     /* 信号的处理函数中不能调用不可重入函数 , eg. malloc(), free(), printf()... */
     // getpwnam() 中使用了 static 变量, 是不可重入函数
-    if ((rootptr = getpwnam("root")) == NULL) {
-        err_sys("get present work name");
+    if (signo == SIGALRM) {
+        struct passwd *rootptr;
+        if ((rootptr = getpwnam("root")) == NULL) {
+            err_sys("get present work name");
+        }
+        alarm(1);
+    } else if (signo == SIGSEGV) {
+        printf("SIGSEGV occur");
+    } else if (signo == SIGFPE) {
+        printf("SIGFPE occur");
+    } else {
+
     }
-    alarm(1);
 }
 
-static void childterm_sig_handler(int signo);
-void sig_test3(void)
+static void sig_child_handler(int signo);
+void sig_child_test(void)
 {
     pid_t pid;
 
-    if (signal(SIGCLD, childterm_sig_handler) == SIG_ERR) {
+    if (signal(SIGCLD, sig_child_handler) == SIG_ERR) {
         perror("signal error");
     }
 
@@ -158,20 +186,20 @@ void sig_test3(void)
     } else { // parent
         printf("parent:%d %d running\n", getpid(), getppid());
     }
-    pause(); // 阻塞等待, 直到有信号到来
+    pause(); // 阻塞等待, 直到有信号到来, 唤醒父进程
     printf("parent wake up\n");
     sleep(2);
     printf("parent exit\n");
     exit(0);
 }
-static void childterm_sig_handler(int signo)
+static void sig_child_handler(int signo)
 {
     // 在信号处理函数中等待? 软件中断中!!! 应该不可行, 仅仅为了测试
     pid_t pid;
     int status;
 
     printf("SIGCLD received\n"); // printf() 也不可以调用
-    if (signal(SIGCLD, childterm_sig_handler) == SIG_ERR) // 重新注册信号
+    if (signal(SIGCLD, sig_child_handler) == SIG_ERR) // 重新注册信号
         perror("signal error");
     if ((pid = wait(&status)) < 0) {
         perror("wait error");

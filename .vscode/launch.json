@@ -8,13 +8,15 @@
             "name": "gcc - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            //需要运行的是当前打开文件的目录中，名字和当前文件相同，但扩展名为exe的程序
+            "program": "${cwd}/ch7_11_process/a.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
-            "externalConsole": false,
+            "externalConsole": false, // 选为true则会在打开控制台后停滞，暂时不执行程序
             "MIMode": "gdb",
+            // "externalConsole:true", // 是否使用外部控制台，选false的话，我的vscode会出现错误
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

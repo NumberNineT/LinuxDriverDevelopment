@@ -104,7 +104,7 @@ clock_t times(struct tms *buf);
 pid_t getpgrp(void); // 获取当前进程所属进程组 ID
 pid_t getpgid(pid_t pid); // 获取指定进程的进程组 ID
 int setpgid(pid_t pid, pid_t pgid); // 创建一个进程组/将进程转移到其他进程组(设置进程组ID)
-int setpgrp(pid_t pid); // setpgrp(0) == getpgrp()
+// int setpgrp(pid_t pid); // setpgrp(0) == getpgrp()
 pid_t setsid(void); // 创建一个会话
 pid_t getsid(pid_t pid); // 获取会话 ID(会话首进程的进程组 ID)
 // 会话

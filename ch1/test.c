@@ -33,6 +33,12 @@
  */
 #include <signal.h>
 
+/*
+ *	POSIX Standard: 3.2.1 Wait for Process Termination	<sys/wait.h>
+ */
+
+#include <sys/wait.h>
+
 
 /*************
  * MACRO 
@@ -278,7 +284,7 @@ static void sig_int(int param)
 
 void signal_test()
 {
-    char buf[MAXLINE];
+    char buf[MAXLINE] = {0};
     pid_t pid;
     int status;
     clock_t startClock, endClock;
@@ -287,7 +293,8 @@ void signal_test()
         err_sys("signal error");
     }
 
-    printf("%%");
+    printf("%s\n", __func__);
+
     while(fgets(buf, MAXLINE, stdin) != NULL) { // 这里会阻塞
         if(buf[strlen(buf) - 1] == '\n')
             buf[strlen(buf) - 1] = '\0';

@@ -12,10 +12,10 @@
  */
 #include <sys/wait.h>
 
-void *path_alloc()
-{
+// void *path_alloc()
+// {
     
-}
+// }
 
 // 根据 <sys/wait.h> 中的 API 打印进程退出原因
 void pr_exit(int status)

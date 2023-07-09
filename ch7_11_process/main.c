@@ -32,14 +32,14 @@ int main(int argc, char *argv[])
     // process_times_test(argc, argv);
     // process_times_test(argc, argv);
     // test_main();
-    // sig_test();
-    // sig_test2();
-    // sig_test3();
+    // sig_usr_test();
+    // sig_alarm_test();
+    sig_child_test();
     // sig_test4();
     // sig_test5();
     // sig_alarm_test1();
     // sig_test6();
-    sig_test_m();
+    // sig_test_m();
 
 
     if (errno != 0)

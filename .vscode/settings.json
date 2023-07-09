@@ -31,6 +31,7 @@
         "resource.h": "c",
         "wait.h": "c",
         "sigset.h": "c",
-        "acct.h": "c"
+        "acct.h": "c",
+        "signum.h": "c"
     }
 }
