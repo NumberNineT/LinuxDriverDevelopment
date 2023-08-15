@@ -30,6 +30,11 @@
  */
 #include <setjmp.h>
 
+/*
+ *	ISO C99 Standard: 7.23 Date and time	<time.h>
+ */
+#include <time.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -45,16 +50,34 @@
 
 
 
-int kill(pid_t pid, int signo); // kill 默认传送 SIGTERM 信号
-int raise(int signo); // 给进程自己发送信号
-unsigned int alarm(unsigned int seconds); // 为进程注册一个闹钟
-int pause(void); // 阻塞等待一个信号
+extern int kill(pid_t pid, int signo); // kill 默认传送 SIGTERM 信号
+extern int raise(int signo); // 给进程自己发送信号
+extern unsigned int alarm(unsigned int seconds); // 为进程注册一个闹钟
+extern int pause(void); // 阻塞等待一个信号
+void abort(void); // 等效于:raise(SIGABRT);
+
 // signal set
-int sigemptyset(sigset_t *set);
-int sigfillset(sigset_t *set);
-int sigaddset(sigset_t *set, int signo);
-int sigdelset(sigset_t *set, int signo);
-int sigismember(const sigset_t *set, int signo);
+extern int sigemptyset(sigset_t *set);
+extern int sigfillset(sigset_t *set);
+extern int sigaddset(sigset_t *set, int signo);
+extern int sigdelset(sigset_t *set, int signo);
+extern int sigismember(const sigset_t *set, int signo);
+extern int sigprocmask(int how, const sigset_t *restrict set, sigset_t * restrict oset);
+extern int sigpending(sigset_t *set);
+// 检查/修改与指定信号相关联的处理和动作, 第二个参数可以带额外的屏蔽的信号列表
+extern int sigaction(int signo, const struct sigaction * restrict act,
+                        struct sigaction * restrict oact);
+int sigsetjmp(sigjmp_buf env, int savemask);
+void siglongjmp(sigjmp_buf env, int val); // 恢复 sigsetjmp() 的信号屏蔽字
+int sigsuspend(const sigset_t *sigmask); // 挂起进程等待信号
+//注册信号时需要使用 SA_SIGINFO 选项才可以获取发送信号时到传入的参数
+int sigqueue(pid_t pid, int signo, const union sigval value); // 与 kill() 相似, 发送信号, 
+void psignal(int signo, const char *msg);
+void psiginfo(const siginfo_t *info, const char *msg);
+char *strsignal(int signo);
+
+Sigfunc *signal_m(int signo, Sigfunc *func);
+Sigfunc *signal_intr(int signo, Sigfunc *func);
 
 
 // orphaned process group
@@ -71,31 +94,34 @@ static void pr_ids(char *name)
     fflush(stdout);
 }
 
-// int test_main(void)
-// {
-//     char c;
-//     pid_t pid;
+int sig_hup_test(void)
+{
+    char c;
+    pid_t pid;
 
-//     pr_ids("parent");
+    pr_ids("parent");
 
-//     if ((pid = fork()) < 0) {
-//         err_sys("fork failed");
-//         return -1;
-//     } else if (pid > 0) { // parent
-//         sleep(5); // sleep to let child stop itself
-//     } else { // child
-//         pr_ids("child");
-//         signal(SIGHUP, sig_hup); // establish signal handler
-//         kill(getpid(), SIGQUIT); // stop ourself
-//         pr_ids("child"); // print onlyu if we're continued
-//         if (read(STDIN_FILENO, &c, 1) != 1) {
-//             err_sys("read err on controlling TTY, errno:%d", errno);
-//         }
-//     }
-//     exit(0);
-// }
+    if ((pid = fork()) < 0) {
+        err_sys("fork failed");
+        return -1;
+    } else if (pid > 0) { // parent
+        sleep(5); // sleep to let child stop itself
+    } else { // child
+        // 使用 kill 命令向后台运行的进程发送信号:kill -USR1 7216
+        pr_ids("child");
+        signal(SIGHUP, sig_hup); // establish signal handler
+        kill(getpid(), SIGQUIT); // stop ourself
+        pr_ids("child"); // print only if we're continued
+        if (read(STDIN_FILENO, &c, 1) != 1) {
+            err_sys("read err on controlling TTY, errno:%d", errno);
+        }
+    }
+    exit(0);
+}
 
-// we'd better use sigaction() rather thann signal() cause the difference signal() realization
+// Note:
+// we'd better use sigaction() rather thann signal() 
+// cause the difference signal() realization
 static void sig_usr_handler(int signo);
 void sig_usr_test(void)
 {
@@ -125,6 +151,8 @@ static void sig_alrm_handler(int signo);
 void sig_alarm_test(void)
 {
     struct passwd *ptr;
+    int num = 0;
+
     if (signal(SIGALRM, sig_alrm_handler) == SIG_ERR) {
         err_ret("Can't catch SIGALRM");
     }
@@ -134,6 +162,11 @@ void sig_alarm_test(void)
     if (signal(SIGFPE, sig_alrm_handler) == SIG_ERR) {
         err_ret("Can't catch SIGFPE");
     }
+    // 不可以捕获 SIGINT(Ctrl+C), 程序在 sleep() 阻塞,按下按键,执行 signal_handler 之后
+    // 程序回不去 sleep() 之前的上下文了, 所以一直触发 SIGFPE 异常, 执行信号回调
+    // if (signal(SIGINT, sig_alrm_handler) == SIG_ERR) {
+    //     err_ret("Can't catch SIGINT");
+    // }
     for (;;) {
         if((ptr = getpwnam("root")) == NULL) {
             err_sys("error");
@@ -143,9 +176,9 @@ void sig_alarm_test(void)
         } else {
             printf("correct\n");
         }
-        printf("raise a SIGFPE fault\n");
-        printf("%d\n", 1/0);
         sleep(5);
+        printf("raise a SIGFPE fault\n");
+        // printf("%d\n", 1/num++); // 1/0
     }
 }
 static void sig_alrm_handler(int signo)
@@ -159,11 +192,12 @@ static void sig_alrm_handler(int signo)
         }
         alarm(1);
     } else if (signo == SIGSEGV) {
-        printf("SIGSEGV occur");
+        printf("SIGSEGV occur\n");
     } else if (signo == SIGFPE) {
-        printf("SIGFPE occur");
+        printf("SIGFPE occur\n");
+    } else if (signo == SIGINT) {
+        printf("SIGINT occur, do something\n");
     } else {
-
     }
 }
 
@@ -221,12 +255,13 @@ void sig_test4(void)
 
 /**
  * @fun: 自己实现一个 sleep() 使得进程休眠一段时间\
- * @desc: 这个 sleep1 存在三个问题: 如果 alarm 在 sleep1() 之前有使用, 竞争条件...
+ * @desc: 这个 sleep1 存在三个问题: 如果 alarm 在 sleep1() 之前有使用; 竞争条件...
  * @param: 休眠时间
  * @ret: 返回没有休眠的时间
 */
 unsigned int sleep1(unsigned int seconds)
 {
+    // 谁调用就在谁的进程注册 SIGALRM 信号
     if (signal(SIGALRM, alarm_sig_handler2) == SIG_ERR) {
         return seconds;
     }
@@ -349,9 +384,14 @@ static void alarm_sig_handler5(int signo)
 // 自己通过位的方式实现 sigset_t 类型
 #define sigemptyset_m(ptr) (*ptr = 0)
 #define sigfillset_m(ptr)  (*(ptr) = ~(sigset_t_m)0, 0) /* 逗号表达式, 最后的是返回值 */
+// #define sigfillset_m(ptr)           \
+//     do {                            \
+//         *(ptr) = ~((sigset_t_m)0);  \
+//         return 0;                   \
+//     } while(0)
 #define SIGBAD_M(signo)    ((signo) <= 0 || (signo) >= NSIG_M)
 #define NSIG_M              32
-typedef int sigset_t_m;
+typedef int sigset_t_m; // 总共有 32 种信号,每一个位表示一个信号
 int sigaddset_m(sigset_t_m *set, int signo)
 {
     if (SIGBAD_M(signo)) {
@@ -399,7 +439,7 @@ static void print_sig(sigset_t_m *ptr)
     printf("value:%s\n", str);
 }
 
-void sig_test_m(void)
+void my_sig_test(void)
 {
     sigset_t_m sig;
     sigemptyset_m(&sig);
@@ -415,4 +455,475 @@ void sig_test_m(void)
     print_sig(&sig);
     sigdelset_m(&sig, SIGINT);
     print_sig(&sig);
+}
+
+static void sig_quit_handler(int signo);
+void sig_proc_mask_test1(void)
+{
+    char pid[32];
+    sigset_t newmask, oldmask, pendmask;
+
+    if (signal(SIGQUIT, sig_quit_handler) == SIG_ERR) {
+        err_ret("can't catch SIGQUIT");
+    }
+
+    // Block SIGQUIT
+    sigemptyset(&newmask);
+    sigaddset(&newmask, SIGQUIT);
+    if (sigprocmask(SIG_BLOCK, &newmask, &oldmask) < 0) {
+        err_sys("SIG_BLOCK ERR");
+    }
+    printf("SIGQUIT BLOCKED\n");
+
+
+    sleep(5); // SIG_QUIT is pending
+
+    if (sigpending(&pendmask) < 0) {
+        err_sys("get pending signal failed");
+    }
+    if (sigismember(&pendmask, SIGQUIT)) {
+        printf("SIGQUIT pending\n");
+    } else {
+        printf("SIGQUIT is not pending\n");
+    }
+
+    // restore signal mask
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0) {
+        err_sys("SIG_SETMASK ERR");
+    }
+    printf("SIGQUIT UNBLOCKED\n");
+    sleep(5);
+    exit(0);
+    // signal(SIGFPE, SIG_IGN); // 必须要使用 sigprocmask() 设置 mask 才有效
+    // signal(SIGALRM, SIG_IGN);
+    // snprintf(pid, sizeof(pid), "pid:%d", getpid());
+    // pr_mask(pid);
+}
+
+static void sig_quit_handler(int signo)
+{
+    printf("Caught SIGQUIT\n");
+    if (signal(SIGQUIT, SIG_DFL) == SIG_ERR) {
+        err_sys("Can't reset SIGQUIT");
+    }
+}
+// void sig_proc_mask_test2()
+
+//使用 sigaction() 实现 signal()
+Sigfunc *signal_m(int signo, Sigfunc *func)
+{
+    struct sigaction act, oact;
+
+    act.sa_handler = func;
+    act.sa_flags = 0;
+    sigemptyset(&act.sa_mask);
+    if (signo == SIGALRM) {
+#ifdef SA_INTERRUPT
+        act.sa_flags |= SA_INTERRUPT;
+#endif
+    } else {
+        act.sa_flags |= SA_RESTART; // handler 结束后重启被中断的系统调用
+    }
+    if (sigaction(signo, &act, &oact) < 0) {
+        return (SIG_ERR);
+    }
+
+    return (oact.sa_handler); // 返回的是之前的 signal_handler
+}
+
+Sigfunc *signal_intr(int signo, Sigfunc *func)
+{
+    struct sigaction act, oact;
+
+    act.sa_handler = func;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+#ifdef SA_INTERRUPT
+    act.sa_flags |= SA_INTERRUPT; // handler 结束后 不重启 被中断的系统调用
+#endif
+    if (sigaction(signo, &act, &oact) < 0) {
+        return (SIG_ERR);
+    }
+
+    return (oact.sa_handler);
+}
+
+static void fpe_signal_handler(int signo);
+
+void sig_test7()
+{
+    int num = 0;
+    int ret;
+    int cnt = 0;
+    if (signal_m(SIGFPE, fpe_signal_handler) == SIG_ERR) {
+    // if (signal_intr(SIGFPE, fpe_signal_handler) == SIG_ERR) {
+        err_ret("catch SIGFPE failed");
+    }
+
+    for (;;) {
+        printf("result:\n");
+        if (cnt++ == 0) // 只执行一次
+            // ret = 1 / num; // 为什么会一直触发 SIGFPE 这个信号?????????
+            ;
+        sleep(5);
+    }
+}
+
+static void fpe_signal_handler(int signo)
+{
+    printf("catch SIGFPE\n");
+}
+
+static void sig_usr1(int signo);
+static void sig_alrm(int);
+static sigjmp_buf jmpbuf;
+static volatile sig_atomic_t canjump; // 可以跳转标志位
+void sig_setjmp_test2(void)
+{
+    if (signal(SIGUSR1, sig_usr1) == SIG_ERR) {
+        err_sys("SIGUSR1 err");
+    }
+    if (signal(SIGALRM, sig_alrm) == SIG_ERR) {
+        err_sys("SIGALRM err");
+    }
+    pr_mask("start main:");
+
+    if (sigsetjmp(jmpbuf, 1)) { // sigsetjmp() 成功返回 0; 从 siglongjmp() 返回非零
+        pr_mask("ending main:");
+        exit(0);
+    }
+
+    canjump = 1; //
+    for (;;)
+        pause();
+}
+
+static void sig_usr1(int signo)
+{
+    time_t starttime;
+
+    if (canjump == 0)
+        return;
+    pr_mask("starting sig_usr1:"); // 在执行当前信号处理程序时,当前信号会自动被屏蔽
+    alarm(3);
+    starttime = time(NULL);
+    for (;;) { // delay 5s
+        if (time(NULL) > starttime + 5)
+            break;
+    }
+    pr_mask("finishing sig_usr1:");
+    canjump = 0;
+    siglongjmp(jmpbuf, 1); // 跳转到 main 函数, 而不是直接 return
+}
+
+static void sig_alrm(int signo)
+{
+    pr_mask("in sig_alrm:"); // 在执行当前信号处理程序时,当前信号会自动被屏蔽
+}
+
+static void int_signal_handler(int signo);
+void sig_suspend_test1(void)
+{
+    sigset_t newmask, oldmask, waitmask;
+
+    pr_mask("program start");
+    if (signal(SIGINT, int_signal_handler) == SIG_ERR) {
+        err_ret("register SIGINT failed");
+    }
+
+    sigemptyset(&waitmask);
+    sigaddset(&waitmask, SIGUSR1);
+
+    sigemptyset(&newmask);
+    sigaddset(&newmask, SIGINT);
+
+    // block SIGINT
+    if (sigprocmask(SIG_BLOCK, &newmask, &oldmask) < 0) {
+        err_ret("SIG_BLOCK failed");
+    }
+
+    // 临界段代码开始
+    pr_mask("Critical region");
+    printf("This is criticcal region code\n");
+    sleep(1);
+    // 临界段代码结束
+
+    // pause, allow all signals except SIGUSR1
+    // 这里阻塞等待除了 SIGUSR1 之外的其他所有信号, 等待成功返回 -1
+    if (sigsuspend(&waitmask) != -1) {
+        err_ret("sig suspend failed");
+    }
+    pr_mask("after return from sigsuspend");
+
+    // reset signals before block
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0) {
+        err_ret("SIG_SETMASK failed");
+    }
+    pr_mask("program exit");
+    exit(0);
+
+}
+static void int_signal_handler(int signo)
+{
+    pr_mask("int handler");
+}
+
+static int quitflag = 0;
+static void int_signal_handler2(int signo);
+
+void sig_suspend_test2(void)
+{
+    sigset_t newmask, oldmask, zero_mask;
+
+    if (signal(SIGINT, int_signal_handler2) == SIG_ERR) {
+        err_ret("SIGINT failed");
+    }
+    if (signal(SIGQUIT, int_signal_handler2) == SIG_ERR) {
+        err_ret("SIGQUIT failed");
+    }
+
+    sigemptyset(&newmask);
+    sigaddset(&newmask, SIGQUIT);
+    sigemptyset(&zero_mask);
+    if (sigprocmask(SIG_BLOCK, &newmask, &oldmask)) {
+        err_sys("SIGBLOCK ERR");
+    }
+
+    while (quitflag == 0)
+        sigsuspend(&zero_mask); // 阻塞等待任何信号,但是只有 SIGQUIT 可以让他退出循环, SIGSTOP 呢?
+    
+    // reset signals
+    pr_mask("before quit");
+    quitflag = 0;
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0) {
+        err_ret("SIG_SETMASK error");
+    }
+    pr_mask("after quit");
+
+    exit(0);
+}
+
+static void int_signal_handler2(int signo)
+{
+    if (signo == SIGINT)
+        printf("interrupt\n");
+    else if (signo == SIGQUIT)
+        quitflag = 1;
+    pr_mask("signal handler");
+}
+
+// 通过信号实现父子进程同步, SIGUSR1 由父进程发送给子进程, SIGUSR2 由子进程发送到父进程
+// TELL_WAIT, TELL_PARENT, TELL_CHILD, WAIT_PARENT, WAIT_CHILD
+static volatile sig_atomic_t sigflag;
+static sigset_t newmask, oldmask, zeromask;
+static void usr_signal_handler(int signo)
+{
+    sigflag = 1;
+}
+
+void TELL_WAIT(void)
+{
+    if (signal(SIGUSR1, usr_signal_handler) == SIG_ERR)
+        err_ret("SIGUSR1 err");
+    if (signal(SIGUSR2, usr_signal_handler) == SIG_ERR)
+        err_ret("SIGUSR2 err");
+
+    sigemptyset(&zeromask);
+    sigemptyset(&newmask);
+    sigaddset(&newmask, SIGUSR1);
+    sigaddset(&newmask, SIGUSR2);
+    if (sigprocmask(SIG_BLOCK, &newmask, &oldmask) < 0) {
+        printf("SIG_BLOCK failed\n");
+    }
+}
+
+// tell parent we're done
+void TELL_PARENT(pid_t pid)
+{
+    kill(pid, SIGUSR2);
+}
+
+// wait for parent
+void WAIT_PARENT(void)
+{
+    while (sigflag == 0)
+        sigsuspend(&zeromask);
+    // reset signals
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0) {
+        err_ret("SIG_SETMASK failed");
+    }
+}
+
+// tell child we're done
+void TELL_CHILD(pid_t pid)
+{
+    kill(pid, SIGUSR1);
+}
+
+// wait for child
+void WAIT_CHILD(void)
+{
+    while (sigflag == 0)
+        sigsuspend(&zeromask);
+    sigflag = 0;
+    // reset signal mask
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0) {
+        err_ret("SIG_SETMASK failed");
+    }
+}
+
+// abort() 终止进程, 对打开的 I/O流关闭
+// abort() 可能的内部实现
+void abort1(void)
+{
+    sigset_t mask;
+    struct sigaction act;
+
+    sigaction(SIGABRT, NULL, &act);
+    if (act.sa_handler == SIG_IGN) { // 之前的行为是忽略
+        act.sa_handler = SIG_DFL;
+        sigaction(SIGABRT, &act, NULL);
+    }
+    if (act.sa_handler == SIG_DFL) {
+        fflush(NULL); // flush all open stdio streams
+    }
+
+    sigfillset(&mask);
+    sigdelset(&mask, SIGABRT);
+    sigprocmask(SIG_SETMASK, &mask, NULL); // 屏蔽除 SIGABRT 之外的所有信号
+    kill(getpid(), SIGABRT); // 给自己发信号
+
+    // 程序已经捕获到了 SIGABRT 并且执行完了信号处理程序, 按道理程序应该退出了
+    fflush(NULL);
+    act.sa_handler = SIG_DFL;
+    sigaction(SIGABRT, &act, NULL);
+    sigprocmask(SIG_SETMASK, &mask, NULL);
+    kill(getpid(), SIGABRT);
+    exit(1); // 程序不应该运行到这里, 因为 SIGABRT 的默认行为就是退出程序了
+}
+
+void abort_test1(void)
+{
+    printf("start abort test\n");
+    abort1();
+    printf("end abort test\n");
+}
+
+// system test
+static void int_signal_handler5(int signo);
+static void child_signal_handler5(int signo);
+int system_m1(const char *cmdstring);
+void system_test1(void)
+{
+    if (signal(SIGINT, int_signal_handler5) == SIG_ERR) {
+        err_ret("signal int err");
+    }
+    if (signal(SIGCHLD, child_signal_handler5) == SIG_ERR) {
+        err_ret("signal child err");
+    }
+    if (system("/bin/ed") < 0) {
+    // if (system_m1("/bin/ed") < 0) {
+        err_ret("system err");
+    }
+    exit(0);
+}
+static void int_signal_handler5(int signo)
+{
+    printf("CAUGHT SIGINT\n");
+}
+
+static void child_signal_handler5(int signo)
+{
+    printf("CAUGHT SIGCHLD\n");
+}
+
+// 可能的 system() 实现
+// POSIX.1 要求 system() 捕获:SIGINT, SIGQUIT, 忽略 SIGQUIT
+int system_m1(const char *cmdstring)
+{
+    pid_t pid;
+    int status;
+    struct sigaction ignore, saveintr, savequit;
+    sigset_t childmask, savemask;
+
+    if (!cmdstring) {
+        return 1;
+    }
+
+    // ignore SIGINT & SIGQUIT
+    ignore.sa_handler = SIG_IGN;
+    sigemptyset(&ignore.sa_mask);
+    ignore.sa_flags = 0;
+    if (sigaction(SIGINT, &ignore, &saveintr) < 0) {
+        return -1;
+    }
+    if (sigaction(SIGQUIT, &ignore, &savequit) < 0) {
+        return -1;
+    }
+
+    // block SIGCHILD
+    sigemptyset(&childmask);
+    sigaddset(&childmask, SIGCHLD);
+    if (sigprocmask(SIG_BLOCK, &childmask, &savemask) < 0) {
+        printf("SIG_BLOCK failed\n");
+        return -1;
+    }
+
+    if ((pid = fork()) < 0) {
+        status = -1;
+    } else if (pid == 0) { // child
+        // restore signal actions & reset signal mask
+        sigaction(SIGINT, &saveintr, NULL);
+        sigaction(SIGQUIT, &savequit, NULL);
+        sigprocmask(SIG_SETMASK, &savemask, NULL);
+        execl("/bin/sh", "sh", "-c", cmdstring, (char*)0);
+        _exit(127); // int8_t:-128~127
+    } else { // parent
+        // 父进程等待子进程结束
+        while (waitpid(pid, &status, 0) < 0) {
+            if (errno != EINTR) {
+                status = -1; // error other than EINTR from waitpid
+                break;
+            }
+        }
+    }
+
+    // reset signal actions & reset signal mask
+    sigaction(SIGINT, &saveintr, NULL);
+    sigaction(SIGQUIT, &savequit, NULL);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+
+    return status;
+}
+
+static void test_signal_handler2(int signo, siginfo_t *info, void *param);
+void signal_test9(void)
+{
+    siginfo_t info = {0};
+    struct sigaction act;
+    sigset_t zeromask2;
+    char *p_tr;
+
+
+    psignal(SIGINT, "signal_test9");
+    printf("SIGKILL:%s\n", strsignal(SIGKILL));
+
+    // psiginfo(&info, p_str); // siginfo_t
+    // printf("siginfo:%s\n", p_str);
+    act.sa_flags = SA_SIGINFO;
+    sigemptyset(&act.sa_mask);
+    act.sa_sigaction = test_signal_handler2;
+    if (sigaction(SIGINT, &act, NULL) < 0) {
+        err_ret("sigact failed");
+    }
+    printf("pause:\n");
+    // for(;;)
+    pause();
+
+}
+
+static void test_signal_handler2(int signo, siginfo_t *info, void *param)
+{
+    printf("CATCH signal:%d\n", signo);
+    psiginfo(info, "test_signal_handler2");
 }

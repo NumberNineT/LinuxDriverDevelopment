@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-
+#include <signal.h>
+#include <time.h>
+#include <unistd.h>
 
 
 
@@ -49,6 +51,11 @@ static long openmax = 0;
 #define SYSTEM_TIME_TEST        0
 #define CHILD_TIME_TEST         1
 
+#define pr_signal               pr_mask // 打印信号集
+
+typedef void Sigfunc(int signo); // 定义函数类型?
+// typedef void (Sigfunc*)(int signo); // 定义函数指针类型
+
 
 /*************
  * VARIABLE 
@@ -60,5 +67,6 @@ static long xsi_version;
  * DECLARATION
  *****************/
 void pr_exit(int status);
+void pr_mask(const char *str);
 
 #endif

@@ -32,6 +32,7 @@
         "wait.h": "c",
         "sigset.h": "c",
         "acct.h": "c",
-        "signum.h": "c"
+        "signum.h": "c",
+        "thread": "c"
     }
 }
