@@ -53,7 +53,10 @@ int main(int argc, char *argv[])
 
     // thread_test1();
     // thread_exit_test2();
-    thread_exit_test3();
+    // thread_exit_test3();
+
+
+    mq_test1();
 
     if (errno != 0)
 	    printf("Hello, world end with error:%d\n\n", errno);

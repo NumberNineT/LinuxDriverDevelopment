@@ -50,4 +50,8 @@ void thread_test1(void);
 void thread_exit_test2(void);
 void thread_exit_test3(void);
 
+
+int mq_test1(void);
+
+
 #endif
