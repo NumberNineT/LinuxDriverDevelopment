@@ -49,7 +49,13 @@ void sleep_test1(void);
 void thread_test1(void);
 void thread_exit_test2(void);
 void thread_exit_test3(void);
-
+void thread_cleanup_test1(void);
+void thread_sync_test1(void);
+void thread_lock_test2(void);
+void lock_test1(void); 
+void thread_lock_test3(void);
+void job_queue_test(void);
+void cond_test1(void);
 
 int mq_test1(void);
 
