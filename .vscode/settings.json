@@ -33,6 +33,16 @@
         "sigset.h": "c",
         "acct.h": "c",
         "signum.h": "c",
-        "thread": "c"
+        "thread": "c",
+        "sigthread.h": "c",
+        "pthreadtypes.h": "c",
+        "syslog.h": "c",
+        "pthread.h": "c",
+        "errno-base.h": "c",
+        "select.h": "c",
+        "aio.h": "c",
+        "poll.h": "c",
+        "uio.h": "c",
+        "mman.h": "c"
     }
 }

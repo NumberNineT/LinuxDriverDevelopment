@@ -46,16 +46,36 @@ void system_test1(void);
 void signal_test9(void);
 void sleep_test1(void);
 
-void thread_test1(void);
-void thread_exit_test2(void);
-void thread_exit_test3(void);
-void thread_cleanup_test1(void);
-void thread_sync_test1(void);
-void thread_lock_test2(void);
-void lock_test1(void); 
-void thread_lock_test3(void);
-void job_queue_test(void);
-void cond_test1(void);
+extern void thread_test1(void);
+extern void thread_exit_test2(void);
+extern void thread_exit_test3(void);
+extern void thread_cleanup_test1(void);
+extern void thread_sync_test1(void);
+extern void thread_lock_test2(void);
+extern void lock_test1(void); 
+extern void thread_lock_test3(void);
+extern void job_queue_test(void);
+extern void cond_test1(void);
+extern void barrier_test(void);
+extern void sysconf_test2(void);
+extern void thread_property_test1(void);
+extern int recursive_mutex_test1(void);
+extern void getenv_test(void);
+extern void getenv_test3(void);
+void thread_signal_test1(void);
+void fork_handler_test1(void);
+
+
+
+
+
+
+
+
+
+
+
+
 
 int mq_test1(void);
 
