@@ -4,6 +4,8 @@
 #include "common/apue.h"
 #include "ch7_12_process/ch11.h"
 #include "ch13_io/ch13.h"
+#include "ch16_socket/ch16.h"
+#include "ch17_IPC/ch17.h"
 
 
 int main(int argc, char *argv[])
@@ -79,8 +81,37 @@ int main(int argc, char *argv[])
     // file_lock_test(argc, argv);
     // char_process_test(argc, argv);
     // aio_test1(argc, argv);
-    mmap_io_test(argc, argv);
-    
+    // mmap_io_test(argc, argv);
+    // pipe_test1();
+    // pipe_test2(argc, argv);
+    // parent_child_sync_test1();
+    // pager_test2(argc, argv);
+    // popen_test1();
+    // coprocess_test1();
+    // network_ipc_test1();
+    // get_addr_info_test1(argc, argv);
+    // socketpair_send_test(argc, argv);
+    // socketpair_recv_test();
+    // unix_socket_test1();
+    // unix_socket_server_test2();
+    // unix_socket_client_test2();
+    // buf_args(NULL, NULL);
+    // start_open_server_v1(NULL, NULL);
+    // start_open_client_v1(NULL, NULL);
+
+
+    // change_term_stat();
+    // term_state_flag();
+    // term_get_name();
+    // tty_test();
+    // strdup_test();
+    // ttyname_test();
+    // getpass_test();
+    // unnormal_terminal_test();
+    // winsize_test();
+    pty_test(argc, argv);
+    // tty_test();
+
     if (errno != 0)
 	    printf("Hello, world end with error:%d\n\n", errno);
     else

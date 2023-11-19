@@ -43,6 +43,19 @@
         "aio.h": "c",
         "poll.h": "c",
         "uio.h": "c",
-        "mman.h": "c"
+        "mman.h": "c",
+        "socket.h": "c",
+        "stdint.h": "c",
+        "inet.h": "c",
+        "in.h": "c",
+        "ch17.h": "c",
+        "stddef.h": "c",
+        "array": "c",
+        "bitset": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "un.h": "c",
+        "ch16.h": "c",
+        "*.tcc": "c"
     }
 }

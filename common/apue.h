@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <stddef.h>
 
 
 /***************************************************************
@@ -101,5 +102,21 @@ int lock_file(int fd);
 
 extern ssize_t readn(int fd, void *buf, size_t nbytes);
 extern ssize_t writen(int fd, void *buf, size_t nbytes);
+
+// UNIX 域套接字用于同一个计算机上的进程之间的通信
+int serv_listen(const char *name);
+int serv_accept(int listenfd, uid_t *uidptr);
+int cli_conn(const char *name);
+
+int send_fd(int fd, int fd_to_send);
+int send_err(int fd, int errcode, const char *msg);
+int recv_fd(int fd, ssize_t (*userfunc)(int, const void *, size_t));
+
+// defined at socket.h
+// unsigned char *CMSG_DATA(struct cmsghdr *cp);
+// struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *mp);
+// struct cmsghdr *CMSG_NXTHDR(struct msghdr *mp, struct cmsghdr *cp);
+// unsigned int CMSG_LEN(unsigned int nbytes);
+
 
 #endif
