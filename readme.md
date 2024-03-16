@@ -4,6 +4,7 @@
 
 - TODO:
 1. gdb command line usage.
+2. 学习 miwear bluetooth stack 与 bluetooth app 应用层的异步部分, 他们是怎么让异步操作正常跑起来的?
 
 ---
 
@@ -21,3 +22,10 @@ c_cpp_properties.json(compiler path and intelliSense settings),负责更改路�
 1.单一源文件，点击就能运行and debug
 2.可执行文件，主要针对make后得到的可执行文件进行debug
 3.cmake项目
+
+##### 2.编译方法
+```shell
+gcc main.c common/apue.c ch1/test.c -lpthread -lrt -w -o test
+# -w 忽略警告
+# -lpthread 链接 thread 库
+# -g debug

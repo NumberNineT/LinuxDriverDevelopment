@@ -81,6 +81,11 @@ int main(int argc, char *argv[])
     // file_lock_test(argc, argv);
     // char_process_test(argc, argv);
     // aio_test1(argc, argv);
+    // aio_read_test1();
+    // aio_suspend_test();
+    // aio_lio_listio_test();
+    // aio_signal_test();
+    aio_signal_thread_test();
     // mmap_io_test(argc, argv);
     // pipe_test1();
     // pipe_test2(argc, argv);
@@ -109,7 +114,7 @@ int main(int argc, char *argv[])
     // getpass_test();
     // unnormal_terminal_test();
     // winsize_test();
-    pty_test(argc, argv);
+    // pty_test(argc, argv);
     // tty_test();
 
     if (errno != 0)

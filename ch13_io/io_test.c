@@ -43,14 +43,14 @@ int pselect(int maxfdp1, fd_set * restrict readfds, fd_set * restrict writefds, 
 int poll(struct pollfd fdarray[], nfds_t nfds, int timeout);
 
 // 异步 IO
-// int aio_read(struct aiocb *aiocb);
-// int aio_write(struct aiocb *aiocb);
+// int aio_read(struct aiocb *aiocb); //异步读请求
+// int aio_write(struct aiocb *aiocb); //异步写请求
+// int aio_error(const struct aiocb *aiocb); // 检查异步请求的状态
+// ssize_t aio_return(const struct aiocb *aiocb); // 获取异步请求完整的返回值(异步io操作完成的结果)
+// int aio_suspend(const struct aiocb *const list[], int nent, const struct timespec *timeout); // 挂起调用进程直到一个或者多个异步请求已完成, 当某一个完成异步请求完成, 也会返回一次, 
+// int aio_cancel(int fd, struct aiocb *aiocb); // 取消异步请求
+// int lio_listio(int mode, struct aiocb *restrict const lilst[restrict], int nent, struct sigevent * restrict sigev); // 发起一系列异步操作请求, 数组中
 // int aio_fsync(int op, struct aiocb *aiocb);
-// int aio_error(const struct aiocb *aiocb);
-// ssize_t aio_return(const struct aiocb *aiocb);
-// int aio_suspend(const struct aiocb *const list[], int nent, const struct timespec *timeout);
-// int aio_cancel(int fd, struct aiocb *aiocb);
-// int lio_listio(int mode, struct aiocb *restrict const lilst[restrict], int nent, struct sigevent * restrict sigev);
 
 // 散步读 & 聚集写
 ssize_t readv(int fd, const struct iovec *iov, int iovcnt);

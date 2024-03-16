@@ -12,8 +12,6 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stddef.h>
-
-
 /***************************************************************
  * MACRO
  ***************************************************************/
@@ -84,16 +82,14 @@ typedef void Sigfunc(int signo); // 定义函数类型?
 #define is_read_lockable(fd, offset, whence, len) (lock_test((fd), F_RDLCK, (offset), (whence), (len)) == 0)
 #define is_write_lockable(fd, offset, whence, len) (lock_test((fd), F_WRLCK, (offset), (whence), (len)) == 0)
 
-
-/*************
- * VARIABLE 
- *************/
-static long posix_version = 0;
-static long xsi_version;
-
+//switch-case case return string
+#define CASE_RET_STR(case_num, case_str) {case case_num: return case_str;}
 /*****************
- * DECLARATION
+ * 
  *****************/
+/***************************************************************
+ * DECLARATION
+ ***************************************************************/
 void pr_exit(int status);
 void pr_mask(const char *str);
 int lock_reg(int fd, int cmd, int type, off_t offset, int whence, off_t len);
@@ -117,6 +113,11 @@ int recv_fd(int fd, ssize_t (*userfunc)(int, const void *, size_t));
 // struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *mp);
 // struct cmsghdr *CMSG_NXTHDR(struct msghdr *mp, struct cmsghdr *cp);
 // unsigned int CMSG_LEN(unsigned int nbytes);
+/***************************************************************
+ * VARIABLE
+ ***************************************************************/
+static long posix_version = 0;
+static long xsi_version;
 
 
 #endif

@@ -56,6 +56,9 @@
         "utility": "c",
         "un.h": "c",
         "ch16.h": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "syscall.h": "c",
+        "aio_abi.h": "c",
+        "byteorder.h": "c"
     }
 }
