@@ -111,6 +111,8 @@ void barrier_test(void)
         if (err != 0)
             err_ret("create thread failed");
     }
+    //TODO:
+    // 主线程子线程同时阻塞等待, 同时结束
     pthread_barrier_wait(&barrier);
     merge();
     gettimeofday(&end, NULL);

@@ -33,12 +33,13 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
 int pthread_rwlock_timedrdlock(pthread_rwlock_t * restrict rwlock, const struct timespec * restrict tsptr);
 int pthread_rwlock_timedwrlock(pthread_rwlock_t * restrict rwlock, const struct timespec * restrict tsptr);
 
+////因为POSIX标准只规定了接口长什么样子，没规定怎么实现，所以pthread_cond_t这个数据类型可能被实现为结构体，为了最大化可移植性，就搞了个init函数来动态初始化
 int pthread_cond_init(pthread_cond_t * restrict cond, const pthread_condattr_t * restrict attr);
 int pthread_cond_destroy(pthread_cond_t *cond);
-int pthread_cond_wait(pthread_cond_t  * restrict cond, pthread_mutex_t * restrict mutex);
+int pthread_cond_wait(pthread_cond_t  * restrict cond, pthread_mutex_t * restrict mutex); //pthread_cond_wait()函数可以被pthread_cond_signal()或者是pthread_cond_broadcast()函数唤醒
 int pthread_cond_timedwait(pthread_cond_t * restrict cond, pthread_mutex_t * mutex, const struct timespec * restrict tsptr);
-int pthread_cond_signal(pthread_cond_t *cond);
-int pthread_cond_breadcast(pthread_cond_t *cond);
+int pthread_cond_signal(pthread_cond_t *cond); //pthread_cond_signal()可以唤醒至少一个线程
+int pthread_cond_breadcast(pthread_cond_t *cond); //而pthread_cond_broadcast()则是唤醒等待该条件满足的所有线程
 
 int pthread_spin_init(pthread_spinlock_t *lock, int shared); // 不阻塞(阻塞会导致线程休眠,调度器重新调度),忙等
 int pthread_spin_destroy(pthread_spinlock_t *lock);
@@ -46,6 +47,7 @@ int pthread_spin_lock(pthread_spinlock_t *lock);
 int pthread_spin_trylock(pthread_spinlock_t *lock);
 int pthread_spin_unlock(pthread_spinlock_t *lock);
 
+//主线程子线程同时阻塞等待
 int pthread_barrier_init(pthread_barrier_t * restrict barrier, const pthread_barrierattr_t * restrict attr, unsigned int count);
 int pthread_barrier_destroy(pthread_barrier_t * restrict barrier);
 int pthread_barrier_wait(pthread_barrier_t *barrier);
