@@ -12,7 +12,8 @@
 #define NQ          3       // number of queues
 #define MAXMSZ      512      // maximum message size
 #define KEY         123   // key of first message queue
-#define UNIX_DOMAIN_SOCKET_PATH     "/var/tmp/foo.test"
+// #define UNIX_DOMAIN_SOCKET_PATH     "/var/tmp/foo.test"
+#define UNIX_DOMAIN_SOCKET_PATH     "/home/qz/code/LinuxDriverDevelopment/foo.test"
 
 extern int socketpair(int domain, int type, int protocol, int sockfd[2]);
 
@@ -140,18 +141,23 @@ void unix_socket_server_test2(void)
     int listen_fd, fd;
     uid_t user_id;
     int n;
-    char buff[512]  = {0};
+    char buff[2048]  = {0};
 
+    printf("serv_listen:%d\n", getpid());
     if ((listen_fd = serv_listen(UNIX_DOMAIN_SOCKET_PATH)) < 0) 
         err_ret("listen failed:%d\n", listen_fd);
 
+    printf("serv_accept:%d\n", getpid());
     if ((fd = serv_accept(listen_fd, &user_id)) < 0)
         err_ret("accept failed:%d\n", fd);
     
+    printf("start read:%d\n", getpid());
     while (1) {
-        n = read(fd, buff, 512);
-        buff[n] = '\0';
-        printf("read len:%d data:%s\n", n, buff);
+        bzero(buff, sizeof(buff));
+        n = read(fd, buff, 2048);
+        // buff[n] = '\0';
+        // printf("read len:%d data:%s\n", n, buff);
+        printf("read len:%d data:%c %d\n", n, buff[0], buff[0]);
     }
 }
 
@@ -160,17 +166,27 @@ void unix_socket_server_test2(void)
 void unix_socket_client_test2(void)
 {
     int fd;
-    char buff[512] = {0};
+    char buff[1024] = {0};
+    char ix = 0;
+    int nread;
 
+    printf("client conn:%d\n", getpid());
     if ((fd = cli_conn(UNIX_DOMAIN_SOCKET_PATH)) < 0)
         err_ret("connect failed\n");
 
+    printf("start read:%d\n", getpid());
     // 死循环:因为 uint8_t:0-255
-    for (uint8_t ix = 0; ix < 256; ++ix) {
-        snprintf(buff, 512, "data ix:%d\n", ix);
-        printf("client send:%s\n", buff);
-        write(fd, buff, strlen(buff));
+    while(1) {
+        ++ix;
+        memset(buff, ix, sizeof(buff));
+        // snprintf(buff, 512, "data ix:%d\n", ++ix);
+        // printf("client send:%s\n", buff);
+        printf("client send len:%d data:%c %d\n", sizeof(buff), buff[0], buff[0]);
+        write(fd, buff, sizeof(buff));
         sleep(2);
+        // bzero(buff, sizeof(buff));
+        // nread = read(fd, buff, 1024);
+        // printf("client read:%d\n", nread);
     }
     exit(0);
     

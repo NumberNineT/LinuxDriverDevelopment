@@ -11,6 +11,8 @@
 #define QLEN                10
 #define STALE               30 // client's name can't be older than this
 #define CLI_PATH            "/var/tmp/"
+//TODO:
+// #define CLI_PATH            "./"
 #define CLI_PERM            S_IRWXU     // rwx for user only
 
 // 传送文件描述符
@@ -217,6 +219,7 @@ ssize_t writen(int fd, void *ptr, size_t n)
 
 /**
  * @fun 监听客户端的连接请求, 当一个客户端想要连接时, 会通过这个名字发起连接
+ * 
  * @param[in] name 一个众所周知的文件路径名, 客户端可以通过这个路径请求连接
  * @ret 用于接收客户端连接请求的 UNIX 域套接字
 */
@@ -233,7 +236,7 @@ int serv_listen(const char *name)
     // create a unix domain stream socket
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
         return (-2);
-    unlink(name); // in case it already exist
+    unlink(name); // in case it already exist, server 先启动把?
 
     memset(&un, 0, sizeof(un));
     un.sun_family = AF_UNIX;
@@ -263,8 +266,8 @@ errout:
 /**
  * @fun 接受客户端的连接
  * @param[in] listenfd
- * @param[out] uidptr we also obtain the user ID from the pathname
- * @ret
+ * @param[out] uidptr we also obtain the user ID from the pathname that it must bind before calling us
+ * @ret return new client fd if all OK
 */
 int serv_accept(int listenfd, uid_t *uidptr)
 {
@@ -285,41 +288,45 @@ int serv_accept(int listenfd, uid_t *uidptr)
     }
 
     // obatin the client's uid from its calling address
-    len -= offsetof(struct sockaddr_un, sun_path); // 获取 pathname 的长度
-    memcpy(name, un.sun_path, len);
-    name[len] = 0;
-    if (stat(name, &statbuf) < 0) {
-        rval = -3;
-        goto errout;
-    }
+    // len -= offsetof(struct sockaddr_un, sun_path); // 获取 pathname 的长度
+    // memcpy(name, un.sun_path, len);
+    // name[len] = 0;
+    // if (stat(name, &statbuf) < 0) {
+    //     rval = -3;
+    //     goto errout;
+    // }
 
-#ifdef S_ISSOCK // not defined fro SVR4
-    if (S_ISSOCK(statbuf.st_mode) == 0) {
-        rval = -4;
-        goto errout;
-    }
-#endif
+// #ifdef S_ISSOCK // not defined fro SVR4
+//     if (S_ISSOCK(statbuf.st_mode) == 0) {
+//         rval = -4;
+//         goto errout;
+//     }
+// #endif
 
-    // 判断是否有权限
-    if ((statbuf.st_mode & (S_IRWXG | S_IRWXO)) ||
-        ((statbuf.st_mode & S_IRWXU) != S_IRWXU)) {
-            rval = -5;
-            goto errout;
-        }
+    // 判断当前连接的是否有读写权限
+    // if ((statbuf.st_mode & (S_IRWXG | S_IRWXO)) ||
+    //     ((statbuf.st_mode & S_IRWXU) != S_IRWXU)) {
+    //         rval = -5;
+    //         goto errout;
+    //     }
     
-    staletime = time(NULL) - STALE;
-    if (statbuf.st_atime < staletime ||
-        statbuf.st_ctime < staletime ||
-        statbuf.st_mtime < staletime) {
-            rval = -6;
-            goto errout;
-        }
+    //验证与套接字相关联的三个时间参数不比当前时间早 30s
+    // staletime = time(NULL) - STALE;
+    // if (statbuf.st_atime < staletime ||
+    //     statbuf.st_ctime < staletime ||
+    //     statbuf.st_mtime < staletime) {
+    //         rval = -6;
+    //         goto errout;
+    //     }
     
-    if (uidptr != NULL) {
-        *uidptr = statbuf.st_uid; // return uid of caller
-    }
+    // if (uidptr != NULL) {
+    //     *uidptr = statbuf.st_uid; // return uid of caller
+    // }
+    //TODO:
+    //????
     unlink(name); // we're done with pathname now
     free(name);
+
     return (clifd);
 
 errout:
@@ -351,22 +358,27 @@ int cli_conn(const char *name)
         return (-1);
     
     /* fill socket address structure with our structure */
-    memset(&un, 0, sizeof(un));
-    un.sun_family = AF_UNIX;
-    sprintf(un.sun_path, "%s%05ld", CLI_PATH, (long)getpid());
-    len = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
-    unlink(un.sun_path);
+    //这里没让系统选择默认地址, 原因是:如果这样处理,服务器进程将不能区分各个客户端进程.
+    //(如果不为 unix域套接字显式的绑定名字, 内核会代表我们隐式的绑定一个地址且不会在文件系统中创建文件来表示这个套接字).
+    //于是, 我们绑定自己的地址,但在开发使用套接字的客户端程序时, 通常不会这样做.
+    //TODO:(难道是用于调试使用???)
+    // memset(&un, 0, sizeof(un));
+    // un.sun_family = AF_UNIX;
+    // sprintf(un.sun_path, "%s%05ld", CLI_PATH, (long)getpid());
+    // len = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
+    // unlink(un.sun_path); // 防止该路径已经存在
 
-    if (bind(fd, (struct sockaddr*)&un, len) < 0) {
-        rval = -2;
-        goto errout;
-    }
+    // if (bind(fd, (struct sockaddr*)&un, len) < 0) { /*这在文件系统中创建了一个套接字文件,所用的名字与被绑定的路径名一样*/
+    //     rval = -2;
+    //     goto errout;
+    // }
 
-    if (chmod(un.sun_path, CLI_PERM) < 0) {
-        rval = -3;
-        do_unlink = 1;
-        goto errout;
-    }
+    //关闭用户读写可执行以外的其他权限
+    // if (chmod(un.sun_path, CLI_PERM) < 0) {
+    //     rval = -3;
+    //     do_unlink = 1;
+    //     goto errout;
+    // }
 
     // fill socket address structre with server's address
     memset(&sun, 0, sizeof(sun));

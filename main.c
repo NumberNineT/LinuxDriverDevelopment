@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     // aio_suspend_test();
     // aio_lio_listio_test();
     // aio_signal_test();
-    aio_signal_thread_test();
+    // aio_signal_thread_test();
     // mmap_io_test(argc, argv);
     // pipe_test1();
     // pipe_test2(argc, argv);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     // socketpair_recv_test();
     // unix_socket_test1();
     // unix_socket_server_test2();
-    // unix_socket_client_test2();
+    unix_socket_client_test2();
     // buf_args(NULL, NULL);
     // start_open_server_v1(NULL, NULL);
     // start_open_client_v1(NULL, NULL);
