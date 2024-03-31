@@ -13,4 +13,6 @@ void unix_socket_client_test2(void);
 void send_fd_server_test1(void);
 void recv_fd_client_test1(void);
 
+int start_uds_client(void);
+
 #endif

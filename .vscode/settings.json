@@ -59,6 +59,8 @@
         "*.tcc": "c",
         "syscall.h": "c",
         "aio_abi.h": "c",
-        "byteorder.h": "c"
+        "byteorder.h": "c",
+        "typeindex": "c",
+        "typeinfo": "c"
     }
 }

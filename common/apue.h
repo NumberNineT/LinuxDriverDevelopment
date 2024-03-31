@@ -33,7 +33,7 @@
 
 // 仅仅测试使用, 正式代码中尽量不要用 assert
 #define ASSERT(cond) {                                      \
-    if (!cond) {                                            \
+    if (!(cond)) {                                          \
         printf("assert %s line:%d\n", #cond, __LINE__);     \
         exit(-1);                                           \
     }                                                       \
@@ -90,6 +90,7 @@ typedef void Sigfunc(int signo); // 定义函数类型?
 /***************************************************************
  * DECLARATION
  ***************************************************************/
+void dump_stat(struct stat *p_stat);
 void pr_exit(int status);
 void pr_mask(const char *str);
 int lock_reg(int fd, int cmd, int type, off_t offset, int whence, off_t len);

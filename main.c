@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     // process_test2();
     // process_test3();
     // process_test4();
-    // rise_condition_test();
+    // rise_condithread_infoon_test();
 
     // exec_test1();
     // shell_test();
@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
     // get_process_info(argc, argv);
     // get_user_info();
     // process_schedule_test(argc, argv);
-    // process_times_test(argc, argv);
-    // process_times_test(argc, argv);
+    // process_thread_infomes_test(argc, argv);
+    // process_thread_infomes_test(argc, argv);
     // test_main();
     // sig_hup_test();
     // sig_usr_test();
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     // aio_test1(argc, argv);
     // aio_read_test1();
     // aio_suspend_test();
-    // aio_lio_listio_test();
+    // aio_lio_listhread_infoo_test();
     // aio_signal_test();
     // aio_signal_thread_test();
     // mmap_io_test(argc, argv);
@@ -99,7 +99,10 @@ int main(int argc, char *argv[])
     // socketpair_recv_test();
     // unix_socket_test1();
     // unix_socket_server_test2();
-    unix_socket_client_test2();
+    // unix_socket_client_test2();
+    // send_fd_server_test1();
+    // recv_fd_client_test1();
+    start_uds_client();
     // buf_args(NULL, NULL);
     // start_open_server_v1(NULL, NULL);
     // start_open_client_v1(NULL, NULL);
