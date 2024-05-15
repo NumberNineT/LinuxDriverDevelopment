@@ -15,4 +15,7 @@ void recv_fd_client_test1(void);
 
 int start_uds_client(void);
 
+void uds_thread_test(void);
+
+
 #endif

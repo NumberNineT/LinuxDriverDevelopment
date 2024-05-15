@@ -339,3 +339,58 @@ void recv_fd_client_test1(void)
         sleep(1);
     }
 }
+
+static void *send_entry1(void *arg)
+{
+    int nsend;
+    int fd = *(int*)arg;
+    printf("%s pid:%ld fd:%d\n", __func__, getpid(), fd);
+
+    while (1) {
+        nsend = write(fd, "hello", 5);
+        printf("[%ld] send len:%d\n", getpid(), nsend);
+        sleep(1);
+    }
+}
+
+static void *recv_entry1(void *arg)
+{
+    int nrecv;
+    int fd = *(int*)arg;
+    int buff[256];
+    printf("%s pid:%ld fd:%d\n", __func__, getpid(), fd);
+
+    while (1) {
+        nrecv = read(fd, buff, 256);
+        printf("[%ld] recv len:%d\n", getpid(), nrecv);
+        // sleep(1);
+    }
+}
+
+
+/**
+ * @brief socketpair() 跨线程通信测试
+ *        进程内存分布图, 同一进程中的线程共享打开的文件描述符, 例如:标准描述符 STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO
+ *       
+ * @param[in]
+*/
+void uds_thread_test(void)
+{
+    static int fd[2];
+    int ret;
+    pthread_t th_send, th_recv;
+
+    ret = socketpair(AF_UNIX,SOCK_DGRAM, 0, fd);
+    // ASSERT(ret == 0);
+
+    ret = pthread_create(&th_send, NULL, send_entry1, &fd[0]);
+    // ASSERT(ret == 0);
+
+    ret = pthread_create(&th_recv, NULL, recv_entry1, &fd[1]);
+    // ASSERT(ret == 0);
+
+    // pthread_join(&th_send, NULL);
+    // pthread_join(&th_recv, NULL);
+    while (1);
+    printf("main exit\n");
+}

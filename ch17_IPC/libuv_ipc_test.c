@@ -26,7 +26,6 @@ int start_uds_client(void)
     int client_fd;
     int nread, nwrite;
     char char_to_send = 'a';
-    
 
     printf("client[%d] connect:%s\n", getpid(), UDS_SERVER_PATH);
     client_fd = cli_conn(UDS_SERVER_PATH);
@@ -36,12 +35,12 @@ int start_uds_client(void)
     p_buff = (uint8_t*)malloc(2 * KB);
     while (1) {
         // 客户端连上后先写, 然后读
-        printf("client[%d] send:%c len:%d\n", getpid(), char_to_send, 2*KB);
+        printf("client[%d] send:%c len:%d\n", getpid(), char_to_send, rand() % (2*KB));
         memset(p_buff, char_to_send, 2*KB);
-        nwrite = write(client_fd, p_buff, 2 * KB);
-        if (nwrite != 2*KB) {
-            printf("write fail:%d\n", nwrite);
-        }
+        nwrite = write(client_fd, p_buff, rand() % (2*KB));
+        // if (nwrite != 2*KB) {
+        //     printf("write fail:%d\n", nwrite);
+        // }
 
         memset(p_buff, 0, 2*KB);
         nread = read(client_fd, p_buff, 2*KB);

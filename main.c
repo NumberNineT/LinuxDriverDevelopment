@@ -102,11 +102,11 @@ int main(int argc, char *argv[])
     // unix_socket_client_test2();
     // send_fd_server_test1();
     // recv_fd_client_test1();
-    start_uds_client();
+    // start_uds_client();
     // buf_args(NULL, NULL);
     // start_open_server_v1(NULL, NULL);
     // start_open_client_v1(NULL, NULL);
-
+    uds_thread_test();
 
     // change_term_stat();
     // term_state_flag();
